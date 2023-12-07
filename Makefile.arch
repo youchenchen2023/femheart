@@ -1,0 +1,164 @@
+ifndef ARCHES
+
+# if spack is running, get the arch from it.
+ifndef ARCHGUESS
+  ifneq (, $(shell which spack))
+    #do we have an environment loaded?
+    ifeq ("==> No active environment", "$(shell spack env status)")
+      #get the current architecture
+      SPACKGUESS = $(shell spack arch)
+    else
+      #get the environment
+      SPACKGUESS = $(lastword $(shell spack env status))
+    endif
+    #either way, have we already set up a build directory? If so, use that.
+    ifneq (, $(wildcard build/${SPACKGUESS}/CMakeCache.txt))
+      ARCHGUESS = ${SPACKGUESS}
+    endif
+    
+  endif
+endif
+
+ifndef ARCHGUESS
+# guess hostname with hostname command, stripping off all numbers
+HOSTNAME := $(shell hostname -s | sed  's/[0-9]*//g')
+
+ifeq ($(HOSTNAME),bgqfen)  
+  ARCHGUESS = spi
+#  ARCHGUESS = q32
+endif
+ifeq ($(HOSTNAME),rzuseqlac)  
+  ARCHGUESS = bgq-spi
+endif
+ifeq ($(HOSTNAME),seqlac)  
+  ARCHGUESS = bgq-spi
+endif
+ifeq ($(HOSTNAME),vulcanlac)  
+  ARCHGUESS = bgq-spi
+endif
+ifeq ($(HOSTNAME),dawn)  
+  ARCHGUESS = bgp
+endif
+ifeq ($(HOSTNAME),dawndev)
+  ARCHGUESS = bgp
+endif
+ifeq ($(HOSTNAME),udawn)
+  ARCHGUESS = bgp
+endif
+ifeq ($(HOSTNAME),tambo)
+  ARCHGUESS = tambo
+endif
+ifeq ($(HOSTNAME),rzdawndev)
+  ARCHGUESS = bgp
+endif
+ifeq ($(HOSTNAME),bgl)  
+  ARCHGUESS = bgl
+endif
+ifeq ($(HOSTNAME),ubgl)  
+  ARCHGUESS = bgl
+endif
+ifeq ($(HOSTNAME),atlas)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),oslic)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),ansel)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),aztec)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),cab)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),syrah)
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),surface)
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),quartz)
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),edge)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),minos)  
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),rhea)
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),hopi)
+  ARCHGUESS = peloton
+endif
+ifeq ($(HOSTNAME),tux)
+  ARCHGUESS = linux_gnu
+endif
+ifeq ($(HOSTNAME),sole)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),largo)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),silence)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),polgara)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),blackcomb)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),whistler)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),cypress)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),soifon)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),rzmanta)
+  ARCHGUESS = gpu-clang-default
+endif
+ifeq ($(HOSTNAME),pascal)
+  ARCHGUESS = gpu-clang-default
+endif
+ifeq ($(HOSTNAME),ray)
+  ARCHGUESS = gpu-clang-default
+endif
+ifeq ($(HOSTNAME),surface)
+  ARCHGUESS = gpu-clang-default
+endif
+ifeq ($(HOSTNAME),sierra)
+  ARCHGUESS = sierra
+endif
+ifeq ($(HOSTNAME),prince)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),clogin)
+  ARCHGUESS = r92
+endif
+ifeq ($(HOSTNAME),pascal)
+  ARCHGUESS = pascal
+endif
+ifeq ($(HOSTNAME),crestone)
+  ARCHGUESS = osx
+endif
+ifeq ($(HOSTNAME),lassen)
+  ARCHGUESS = sierra
+endif
+ifeq ($(HOSTNAME),araboth)
+  ARCHGUESS = myopenmpi
+endif
+endif
+
+#fall back if everything else fails
+ifndef ARCHGUESS
+   ARCHGUESS = mpi-default
+   $(info Unrecognized build host.  Edit Makefile.arch)
+   $(info Using $(ARCHGUESS))
+endif
+endif
