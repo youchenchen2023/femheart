@@ -61,7 +61,7 @@ class Timeline
 void  readGF(OBJECT* obj, const std::string dataname,
 		mfem::Mesh* mesh, std::shared_ptr<mfem::GridFunction>& sp_gf) {
    std::string filename;
-   objectGet(obj,dataname,filename,"");
+   objectGet(obj,dataname,filename," ");
 
    std::ifstream infile(filename);
    sp_gf = std::make_shared<mfem::GridFunction>(mesh, infile);
@@ -491,9 +491,10 @@ int main(int argc, char *argv[])
    std::vector<std::string> reactionNames;
    reactionNames.push_back(reactionName);
 
-   std::vector<int> celltypes(anatomy.Size());
-   for (int i = 0; i <  anatomy.Size(); ++i) {
-    celltypes[i] = static_cast<int>(anatomy(i));
+   std::vector<int> celltypes(anatomy->Size());
+   ParGridFunction& anatomy_ = *anatomy;
+   for (int i = 0; i <  anatomy->Size(); ++i) {
+    celltypes[i] = static_cast<int>(anatomy_(i));
     }
    /**
    for (int ranklookup=local_extents[my_rank]; ranklookup<local_extents[my_rank+1]; ranklookup++)
