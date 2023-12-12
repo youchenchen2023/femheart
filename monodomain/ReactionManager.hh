@@ -45,7 +45,8 @@ class ReactionManager
  private:
    std::vector<std::string> objectNameFromRidx_;
    std::vector<Reaction*> reactions_;
-   std::vector<int> extents_;
+   std::vector<int> extents_; // entents_[i] = nodes of reaction_[1] +...+ nodes of reactions_[i-1] + nodes of reaction[i]
+                              // so actually it counts how many nodes we have already used for reaction[1] to reaction[i]
    lazy_array<int> EindexFromIindex_;
    std::vector<int> IindexFromEindex_;
    
@@ -57,8 +58,8 @@ class ReactionManager
    
    std::vector<std::map<int, std::pair<int, double> > > subHandleInfoFromTypeAndHandle_;
 
-   std::vector<int> typeFromRidx_;
-   std::vector<std::string> methodNameFromType_;
+   std::vector<int> typeFromRidx_;  // from reaction index (ridx) to type 
+   std::vector<std::string> methodNameFromType_; // every method is associated wiht a type 
    std::set<int> allCellTypes_;
 };
 

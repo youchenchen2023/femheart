@@ -17,7 +17,7 @@ double StimulusCollection::Eval(ElementTransformation& T, const IntegrationPoint
    double x[3];
    Vector transip(x, 3);
  
-   T.Transform(ip, transip);
+   T.Transform(ip, transip); // what is this
 
    double result = 0;
    for (std::size_t istim=0; istim<stim_.size(); istim++)

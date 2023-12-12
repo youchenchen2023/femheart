@@ -7,6 +7,7 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 using namespace std;
 using namespace mfem;
@@ -79,9 +80,18 @@ class StimulusWaveform
    virtual double eval(const double time) = 0;
 };
 
+// squarewave
 class SquareWaveform : public StimulusWaveform
 {
-   virtual double eval(const double time) { return 1; }
+   double eval(const double time) { return 1; }
+};
+
+// sinwave
+class SinWaveform : public StimulusWaveform
+{
+   double duration_;
+   SinWaveform(const double duration):duration_(duration){};
+   double eval(const double time) { return std::sin(M_PI * time/duration_); }
 };
 
 
@@ -99,6 +109,13 @@ class Stimulus
    {
       return stimTime(time) > 0;
    }
+
+   // can we use 
+   // S_time = time - startTime_
+   // period = duration_ + bcl
+   // if( S_time/period <= numTimes_ ){return shiftedTime = std::fmod(time-startTime_, period);}
+   // no  because S_time/period <= numTimes_ is not stable 
+   // however if we just give the endTime then we just need (time < endTime)
    inline double stimTime(const double time) const
    {
       for (int itime=0; itime<numTimes_; itime++)
@@ -108,6 +125,7 @@ class Stimulus
       }
       return -1;
    }
+
    inline double eval(const double time, const int elementNo, const Vector& x)
    {
       double waveTime = stimTime(time);
@@ -132,11 +150,11 @@ class Stimulus
    std::shared_ptr<StimulusWaveform> wave_;
 };
 
-class StimulusCollection : public Coefficient
+class StimulusCollection : public mfem::Coefficient
 {
  public:
    StimulusCollection(const double new_dt) : dt_(new_dt) {}
-   virtual double Eval(ElementTransformation& T, const IntegrationPoint &ip);
+   virtual double Eval(mfem::ElementTransformation& T, const mfem::IntegrationPoint &ip);
    void add(Stimulus stim);
    void updateTime(const double time) { time_ = time; }
  private:

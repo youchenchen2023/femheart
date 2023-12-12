@@ -84,6 +84,7 @@ namespace Grandi
       virtual double getValue(int iCell, int varHandle) const;
       virtual double getValue(int iCell, int varHandle, double V) const;
       virtual const std::string getUnit(const std::string& varName) const;
+      virtual double getVm(int iCell) ;
 
     private:
       unsigned nCells_;
@@ -96,10 +97,11 @@ namespace Grandi
       double RA;
     public:
       void calc(double dt,
+                ro_mgarray_ptr<int> indexArray,
                 ro_mgarray_ptr<double> Vm_m,
                 ro_mgarray_ptr<double> iStim_m,
                 wo_mgarray_ptr<double> dVm_m);
-      void initializeMembraneVoltage(wo_mgarray_ptr<double> Vm);
+      void initializeMembraneVoltage(ro_mgarray_ptr<int> indexArray, wo_mgarray_ptr<double> Vm);
       virtual ~ThisReaction();
 #ifdef USE_CUDA
       void constructKernel();

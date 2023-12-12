@@ -85,7 +85,7 @@ void ReactionManager::create(const double dt, ro_array_ptr<int> cellTypes, const
    //get all the method types
    int numTypes;
    {
-      set<string> methodTypeSet;
+      set<string> methodTypeSet; 
       for (int ii=0; ii<numReactions; ++ii)
       {
          string method;
@@ -218,7 +218,7 @@ void ReactionManager::create(const double dt, ro_array_ptr<int> cellTypes, const
       assert(missingReactions.empty());
    }
       
-   //count how many of each we have.
+   //count how many of each we have. It actually counts each reaction has how many nodes
    vector<int> countFromRidx(numReactions);
    for (int ireaction=0; ireaction<numReactions; ++ireaction)
    {
@@ -243,27 +243,31 @@ void ReactionManager::create(const double dt, ro_array_ptr<int> cellTypes, const
 
    //build up the index
    {
-      EindexFromIindex_.resize(extents_[numReactions]);
-      IindexFromEindex_.resize(cellTypes.size());
+      EindexFromIindex_.resize(extents_[numReactions]); // all nodes 
+      IindexFromEindex_.resize(cellTypes.size()); // nodes of each celltype
+
       wo_array_ptr<int> EindexFromIindexArray = EindexFromIindex_.useOn(CPU);
       
       vector<int> reactionCursor = extents_;
       for (int icell=0; icell<cellTypes.size(); ++icell)
       {
-         int Eindex = icell;
+         //int Eindex = icell;
          int Iindex = -1;
          auto ridx_iter = ridxFromCellType.find(cellTypes[icell]);
          if (ridx_iter != ridxFromCellType.end())
          {
-            Iindex = reactionCursor[ridx_iter->second]++;
+            Iindex = reactionCursor[ridx_iter->second]++;  // x=map(a,b) iter = x.find(a); iter->second : its value is b
             EindexFromIindexArray[Iindex] = icell;
          }
-         IindexFromEindex_[Eindex] = Iindex;
+         IindexFromEindex_[icell] = Iindex; // Eindex = icell
       }
       //finish off the index
       for (int ireaction=0; ireaction<numReactions; ++ireaction)
       {
-         assert(reactionCursor[ireaction] == extents_[ireaction+1]);
+         assert(reactionCursor[ireaction] == extents_[ireaction+1]); // After subloop in reaction[ireaction] for each Iindex ,
+                                                                     //we apply 'Iindex = reactionCursor[ridx_iter->second]++' localsize times
+                                                                     //so we have extents_[ireaction+1] = extents_[ireaction] + loacalsize 
+                                                                     //                                 = reactioncursor[ireaction]
       }
    }
    
