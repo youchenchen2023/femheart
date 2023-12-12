@@ -223,43 +223,10 @@ int main(int argc, char *argv[])
    
    Timeline timeline(dt, endTime);   
 
-   /*
-     Ok, we're solving:
-
-     div(sigma_m*grad(Vm)) = Bm*Cm*(dVm/dt + Iion - Istim)
-
-     time in ms
-     space in mm
-     Vm in mV
-     Iion in uA/uF
-     Istim in uA/uF
-     Cm in uF/mm^2
-     Bm in 1/mm
-     sigma in mS/mm
-
-     To solve this, I use a semi implicit crank nicolson:
-
-     div(sigma_m*grad[(Vm_new+Vm_old)/2]) = Bm*Cm*[(Vm_new-Vm_old)/dt + Iion - Istim]
-
-     with some algebra, that comes to
-
-     {1+dt/(2*Bm*Cm)*(-div sigma_m*grad)}*Vm_new = {1-dt/(2*Bm*Cm)*(-div sigma_m*grad)}*Vm_old - dt*Iion + dt*Istim
-
-     One easy way to check this is to set sigma_m to zero, then you get Forward euler for isolated equations.
-
-     Each {} is a matrix that is done with FEM.
-
-     sigma_m = sigma_e_diagonal*sigma_i_diagonal/(sigma_e_diagonal+sigma_i_diagonal)
-
-     This is the monodomain conductivity.  It really only approximates the bidomain conductivity if the ratio
-     of sigma_e_tensor = k*sigma_i_tensor.  When this happens, you can remove Phi_e from the equations and
-     end up with the equation listed above. 
-   */
-
    
    //StartTimer("Setting Attributes");
-   mesh->SetAttributes();
-  // EndTimer();
+   //mesh->SetAttributes();
+   //EndTimer();
 
    
   // StartTimer("Partition Mesh");
@@ -268,95 +235,6 @@ int main(int argc, char *argv[])
    int *pmeshpart = mesh->GeneratePartitioning(num_ranks);
   // EndTimer();
 
-/*
-   //Go through all the elements and label the partitioning for the vertices
-   std::vector<set<int> > pvertset(mesh->GetNV());
-   for (int ielem=0; ielem<mesh->GetNE(); ielem++)
-   {
-      Array<int> verts;
-      mesh->GetElementVertices(ielem, verts);
-      for (int ivert=0; ivert<verts.Size(); ivert++)
-      {
-         pvertset[verts[ivert]].insert(pmeshpart[ielem]);
-      }
-   }
-
-   std::vector<int> local_extents(num_ranks+1);
-   {
-      std::vector<int> local_counts(num_ranks, 0);
-      for(int i=0; i<mesh->GetNV(); i++)
-      {
-         if ( ! pvertset[i].empty())
-         {
-            local_counts[*(pvertset[i].begin())]++;
-         }
-      }
-
-      local_extents[0] = 0;
-      for (int irank=0; irank<num_ranks; irank++)
-      {
-         local_extents[irank+1] = local_extents[irank]+local_counts[irank];
-      }
-   }
-
-   std::vector<int> globalvert_from_ranklookup(local_extents[num_ranks]);
-   std::vector<int> ghostlocalvert_from_ranklookup(local_extents[num_ranks]);
-   {
-      std::vector<int> cursor_ghostlocal_from_rank(num_ranks, 0);
-      std::vector<int> cursor_ranklookup_from_rank = local_extents;
-      for(int i=0; i<mesh->GetNV(); i++)
-      {
-         if ( ! pvertset[i].empty())
-         {
-            int irank = *(pvertset[i].begin());
-            int ranklookup = cursor_ranklookup_from_rank[irank]++;
-            int globalvert = i;
-            int ghostlocal = cursor_ghostlocal_from_rank[irank];
-            globalvert_from_ranklookup[ranklookup] = globalvert;
-            ghostlocalvert_from_ranklookup[ranklookup] = ghostlocal;
-            for (const int used_by_this_rank : pvertset[i])
-            {
-               cursor_ghostlocal_from_rank[used_by_this_rank]++;
-            }
-         }
-      }
-   }
-
-   //Get the element material types for each index.
-   std::vector<int> material_from_ranklookup(local_extents[num_ranks]);
-   {
-      std::vector<int> element_from_globalvert(mesh->GetNV(), mesh->GetNE());
-      for (int ielem=0; ielem<mesh->GetNE(); ielem++)
-      {
-         Array<int> verts;
-         mesh->GetElementVertices(ielem, verts);
-         for (int ivert=0; ivert<verts.Size(); ivert++)
-         {
-            element_from_globalvert[verts[ivert]] = std::min(element_from_globalvert[verts[ivert]], ielem);
-         }
-      }
-      std::vector<int> cursor_ranklookup_from_rank = local_extents;
-      for(int i=0; i<mesh->GetNV(); i++)
-      {
-         if ( ! pvertset[i].empty())
-         {
-            int irank = *(pvertset[i].begin());
-            int ranklookup = cursor_ranklookup_from_rank[irank]++;
-            int globalvert = i;
-
-            int ielem = element_from_globalvert[globalvert];
-            material_from_ranklookup[ranklookup] = mesh->GetElement(ielem)->GetAttribute();
-         }
-      }
-   }
-   
-   if (my_rank == 0)
-   {
-      for(int i=0; i<num_ranks; i++) {
-         std::cout << "Rank " << i << " has " << local_extents[i+1]-local_extents[i] << " nodes!" << std::endl;
-      }
-   }
-   */
 
    ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
    delete mesh;
@@ -491,17 +369,11 @@ int main(int argc, char *argv[])
    std::vector<std::string> reactionNames;
    reactionNames.push_back(reactionName);
 
-   std::vector<int> celltypes(anatomy->Size());
+   std::vector<int> cellTypes(anatomy->Size());
    ParGridFunction& anatomy_ = *anatomy;
    for (int i = 0; i <  anatomy->Size(); ++i) {
-    celltypes[i] = static_cast<int>(anatomy_(i));
+    cellTypes[i] = static_cast<int>(anatomy_(i));
     }
-   /**
-   for (int ranklookup=local_extents[my_rank]; ranklookup<local_extents[my_rank+1]; ranklookup++)
-   {
-      cellTypes.push_back(material_from_ranklookup[ranklookup]);
-   }
-   */
 
    ReactionWrapper reactionWrapper(dt,reactionNames,defaultGroup,cellTypes); 
 
