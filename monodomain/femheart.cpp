@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
    if (my_rank == 0)
    {  
       std::cout<< dataname << std::endl;
-      std::cout << "Initializing with " << num_ranks << " MPI ranks." << std::endl;
+      std::cout << "Initializing with hhhh" << num_ranks << " MPI ranks." << std::endl;
    }
    
    int order = 1;
