@@ -81,9 +81,11 @@ int main(int argc, char *argv[])
    OptionsParser args(argc, argv);
    args.AddOption(&dataname, "-d", "--data", "Data file to use.");
    args.ParseCheck();
+   
 
    if (my_rank == 0)
-   {
+   {  
+      std::cout<< dataname << std::endl;
       std::cout << "Initializing with " << num_ranks << " MPI ranks." << std::endl;
    }
    
