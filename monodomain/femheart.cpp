@@ -76,10 +76,10 @@ int main(int argc, char *argv[])
 
    units_internal(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
    units_external(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
-   
+   string dataname = "femheart.data";
+
    OptionsParser args(argc, argv);
-   args.AddOption(&mesh_file, "-m", "--mesh", "Mesh file to use.");
-   args.AddOption(&order, "-o", "--order", "Finite element polynomial degree");
+   args.AddOption(&dataname, "-d", "--data", "Data file to use.");
    args.ParseCheck();
 
    if (my_rank == 0)
@@ -90,11 +90,11 @@ int main(int argc, char *argv[])
    int order = 1;
 
    std::vector<std::string> objectFilenames;
-   if (argc == 1)
-      objectFilenames.push_back("femheart.data");
+   //if (argc == 1)
+   objectFilenames.push_back(dataname);
 
-   for (int iargCursor=1; iargCursor<argc; iargCursor++)
-      objectFilenames.push_back(argv[iargCursor]);
+   //for (int iargCursor=1; iargCursor<argc; iargCursor++)
+     // objectFilenames.push_back(argv[iargCursor]);
 
    if (my_rank == 0) {
       for (int ii=0; ii<objectFilenames.size(); ii++)
