@@ -1,4 +1,4 @@
-                                                                                                                                                                        #include "mfem.hpp"
+#include "mfem.hpp"
 #include "object.h"
 #include "object_cc.hh"
 #include "ddcMalloc.h"
@@ -29,7 +29,6 @@
 //#define EndTimer()
 
 using namespace mfem;
-using namespace std;
 
 MPI_Comm COMM_LOCAL = MPI_COMM_WORLD;
 
@@ -62,7 +61,7 @@ class Timeline
 void  readGF(OBJECT* obj, const std::string dataname,
 		mfem::Mesh* mesh, std::shared_ptr<mfem::GridFunction>& sp_gf) {
    std::string filename;
-   objectGet(obj,dataname,filename," ");
+   objectGet(obj,dataname,filename,"");
 
    std::ifstream infile(filename);
    sp_gf = std::make_shared<mfem::GridFunction>(mesh, infile);
@@ -70,7 +69,7 @@ void  readGF(OBJECT* obj, const std::string dataname,
 
 int main(int argc, char *argv[])
 {
-   MPI_Init(NULL, NULL);   // without specific command line
+   MPI_Init(NULL,NULL);   // without specific command line
    int num_ranks, my_rank;
    MPI_Comm_size(COMM_LOCAL,&num_ranks); // number of processes in COMM_LOCAL
    MPI_Comm_rank(COMM_LOCAL,&my_rank); 
@@ -78,29 +77,19 @@ int main(int argc, char *argv[])
    units_internal(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
    units_external(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
 
-   std::string dataname = "femheart.data";
-   std::cout<<"hhh"<<std::endl;
-   std::cout<<"hhh"<<argc<<std::endl;
-   std::cout <<"dataname1"<<dataname<<std::endl;
-
-   OptionsParser args(argc, argv);
-   args.AddOption(&dataname, "-m", "--mesh", "Data file to use.");
-   args.ParseCheck();
-
    if (my_rank == 0)
-   {  
-      std::cout<< dataname << std::endl;
-      std::cout << "Initializing with hhhh" << num_ranks << " MPI ranks." << std::endl;
+   {
+      std::cout << "Initializing with " << num_ranks << " MPI ranks." << std::endl;
    }
    
    int order = 1;
-
+   std::string dataname = "femheart.data";
+   OptionsParser args(argc, argv);
+   args.AddOption(&dataname, "-d", "--data", "Data file to use.");
+   args.ParseCheck();
+   
    std::vector<std::string> objectFilenames;
-   //if (argc == 1)
    objectFilenames.push_back(dataname);
-
-   //for (int iargCursor=1; iargCursor<argc; iargCursor++)
-     // objectFilenames.push_back(argv[iargCursor]);
 
    if (my_rank == 0) {
       for (int ii=0; ii<objectFilenames.size(); ii++)
@@ -112,31 +101,18 @@ int main(int argc, char *argv[])
    assert(obj != NULL);
 
    bool paraview;
-   objectGet(obj, "paraview", paraview, "");
+   objectGet(obj,"paraview",paraview,"");
 
    bool glvis;
-   objectGet(obj, "glvis", glvis, "");
+   objectGet(obj,"glvis",glvis,"");
 
    //StartTimer("Read the mesh");
    // Read shared global mesh
    std::string meshname;
-   objectGet(obj, "mesh", meshname, "");
+   objectGet(obj,"mesh",meshname,"");
    mfem::Mesh *mesh = new mfem::Mesh(meshname.c_str(), 1, 1);  // generate_edges=1, refine=1 (fix_orientation=true by default)
    //mfem::Mesh *mesh = ecg_readMeshptr(obj, "mesh");
    //EndTimer();
-   //Load fiber from file
-   std::shared_ptr<GridFunction> flat_fiber;
-   readGF(obj, "fiber", mesh, flat_fiber);
-
-   std::shared_ptr<GridFunction> flat_sheet;
-   readGF(obj, "sheet", mesh, flat_sheet);
- 
-   std::shared_ptr<GridFunction> flat_trans;
-   readGF(obj, "trans", mesh, flat_trans);
-
-   std::shared_ptr<GridFunction> flat_anatomy;
-   readGF(obj, "anatomy", mesh, flat_anatomy);
-
    int dim = mesh->Dimension();
 
    //Fill in the MatrixElementPiecewiseCoefficients
@@ -234,12 +210,39 @@ int main(int argc, char *argv[])
    
    Timeline timeline(dt, endTime);   
 
-   
-   //StartTimer("Setting Attributes");
-   //mesh->SetAttributes();
-   //EndTimer();
+   /*
+     Ok, we're solving:
 
-   
+     div(sigma_m*grad(Vm)) = Bm*Cm*(dVm/dt + Iion - Istim)
+
+     time in ms
+     space in mm
+     Vm in mV
+     Iion in uA/uF
+     Istim in uA/uF
+     Cm in uF/mm^2
+     Bm in 1/mm
+     sigma in mS/mm
+
+     To solve this, I use a semi implicit crank nicolson:
+
+     div(sigma_m*grad[(Vm_new+Vm_old)/2]) = Bm*Cm*[(Vm_new-Vm_old)/dt + Iion - Istim]
+
+     with some algebra, that comes to
+
+     {1+dt/(2*Bm*Cm)*(-div sigma_m*grad)}*Vm_new = {1-dt/(2*Bm*Cm)*(-div sigma_m*grad)}*Vm_old - dt*Iion + dt*Istim
+
+     One easy way to check this is to set sigma_m to zero, then you get Forward euler for isolated equations.
+
+     Each {} is a matrix that is done with FEM.
+
+     sigma_m = sigma_e_diagonal*sigma_i_diagonal/(sigma_e_diagonal+sigma_i_diagonal)
+
+     This is the monodomain conductivity.  It really only approximates the bidomain conductivity if the ratio
+     of sigma_e_tensor = k*sigma_i_tensor.  When this happens, you can remove Phi_e from the equations and
+     end up with the equation listed above. 
+   */
+
   // StartTimer("Partition Mesh");
    // If I read correctly, pmeshpart will now point to an integer array
    //  containing a partition ID (rank!) for every element ID.
@@ -247,26 +250,11 @@ int main(int argc, char *argv[])
   // EndTimer();
 
 
-   ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
-   delete mesh;
+   ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh, pmeshpart);
    {
-      int num_nodes = pmesh.GetNV();
+      int num_nodes = pmesh->GetNV();
       std::cout << "MPI Rank " << my_rank << " has "  << num_nodes << " nodes." << std::endl;
    }
-
-   pmesh->Save("solution/mesh");
-
-   std::shared_ptr<ParGridFunction> fiber;
-   fiber = std::make_shared<mfem::ParGridFunction>(pmesh, flat_fiber.get(), pmeshpart);
-
-   std::shared_ptr<ParGridFunction> sheet;
-   sheet = std::make_shared<mfem::ParGridFunction>(pmesh, flat_sheet.get(), pmeshpart);
-
-   std::shared_ptr<ParGridFunction> trans;
-   trans = std::make_shared<mfem::ParGridFunction>(pmesh, flat_trans.get(), pmeshpart);
-
-   std::shared_ptr<ParGridFunction> anatomy;
-   anatomy = std::make_shared<mfem::ParGridFunction>(pmesh, flat_anatomy.get(), pmeshpart);
    
    // Build a new FEC...
    FiniteElementCollection *fec;
@@ -293,7 +281,6 @@ int main(int argc, char *argv[])
    gf_Vm = initVm;
 
    ParaViewDataCollection pd("V_m", pmesh);
-   delete pmesh;
    pd.SetPrefixPath("ParaView");
    pd.RegisterField("solution", &gf_Vm);
    if(paraview){
@@ -313,6 +300,28 @@ int main(int argc, char *argv[])
    if(glvis){
       gf_Vm.Save("solution/sol.0.gf");
    }
+
+   //Load fiber from file
+   std::shared_ptr<GridFunction> flat_fiber;
+   readGF(obj, "fiber", mesh, flat_fiber);
+   std::shared_ptr<ParGridFunction> fiber;
+   fiber = std::make_shared<mfem::ParGridFunction>(pmesh, flat_fiber.get(), pmeshpart);
+
+   std::shared_ptr<GridFunction> flat_sheet;
+   readGF(obj, "sheet", mesh, flat_sheet);
+   std::shared_ptr<ParGridFunction> sheet;
+   sheet = std::make_shared<mfem::ParGridFunction>(pmesh, flat_sheet.get(), pmeshpart);
+
+   std::shared_ptr<GridFunction> flat_trans;
+   readGF(obj, "trans", mesh, flat_trans);
+   std::shared_ptr<ParGridFunction> trans;
+   trans = std::make_shared<mfem::ParGridFunction>(pmesh, flat_trans.get(), pmeshpart);
+
+   std::shared_ptr<GridFunction> flat_anatomy;
+   readGF(obj, "anatomy", mesh, flat_anatomy);
+   std::shared_ptr<ParGridFunction> anatomy;
+   anatomy = std::make_shared<mfem::ParGridFunction>(pmesh, flat_anatomy.get(), pmeshpart);
+
    
    // Load conductivity data
    MatrixElementPiecewiseCoefficient sigma_m_coeffs(fiber, sheet, trans);
@@ -379,11 +388,17 @@ int main(int argc, char *argv[])
 
    std::vector<std::string> reactionNames;
    reactionNames.push_back(reactionName);
-
+   //std::vector<int> cellTypes;
    std::vector<int> cellTypes(anatomy->Size());
    for (int i = 0; i <  anatomy->Size(); ++i) {
     cellTypes[i] = static_cast<int>((*anatomy)(i));
    }
+   /**
+   for (int ranklookup=local_extents[my_rank]; ranklookup<local_extents[my_rank+1]; ranklookup++)
+   {
+      cellTypes.push_back(material_from_ranklookup[ranklookup]);
+   }
+   */
 
    ReactionWrapper reactionWrapper(dt,reactionNames,defaultGroup,cellTypes); 
 
@@ -454,7 +469,7 @@ int main(int argc, char *argv[])
       }
 
       reactionWrapper.getVmReadwrite() = actual_Vm; //should be a memcpy
-      reactionWrapper.Calc(dt);
+      reactionWrapper.Calc();
       
       //add stimulii
       stims.updateTime(timeline.realTimeFromTimestep(itime));
@@ -509,7 +524,7 @@ int main(int argc, char *argv[])
       file.write(reinterpret_cast<const char*>(row.data()),row.size() * sizeof(double));
    }
    file.close();
-
+   pmesh->Save("solution/mesh");
 
    // 14. Free the used memory.
    delete M_test;
@@ -518,7 +533,10 @@ int main(int argc, char *argv[])
    delete c;
    delete pfespace;
    if (order > 0) { delete fec; }
+   delete mesh, pmesh, pmeshpart;
+
    MPI_Finalize();
    
    return 0;
 }
+
