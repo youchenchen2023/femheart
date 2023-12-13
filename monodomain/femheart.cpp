@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
    units_external(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
 
    std::string dataname = "femheart.data";
+   std::cout<<"hhh"<<argc<<std::endl;
    std::cout <<"dataname1"<<dataname<<std::endl;
 
    OptionsParser args(argc, argv);
