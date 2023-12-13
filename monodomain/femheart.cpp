@@ -78,16 +78,16 @@ int main(int argc, char *argv[])
    units_external(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
    string dataname = "femheart.data";
 
-   
-   OptionsParser args(argc, argv[]);
-   args.AddOption(&dataname, "-m", "--mesh", "Data file to use.");
-   args.ParseCheck();
-   
    cout<<"argc:"<<argc<<endl;
    for(int i = 0; i< argc; ++i)
       {
          std::cout<<"!"<<argv[i]<<std::endl;
       }
+  // OptionsParser args(argc, argv[]);
+  // args.AddOption(&dataname, "-m", "--mesh", "Data file to use.");
+  // args.ParseCheck();
+   
+
       
    
    if (my_rank == 0)
