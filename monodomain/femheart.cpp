@@ -69,7 +69,7 @@ void  readGF(OBJECT* obj, const std::string dataname,
 
 int main(int argc, char *argv[])
 {
-   MPI_Init(NULL,NULL);   // without specific command line
+   MPI_Init(&argc,&argv);   // without specific command line
    int num_ranks, my_rank;
    MPI_Comm_size(COMM_LOCAL,&num_ranks); // number of processes in COMM_LOCAL
    MPI_Comm_rank(COMM_LOCAL,&my_rank); 
