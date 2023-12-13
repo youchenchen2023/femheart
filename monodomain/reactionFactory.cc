@@ -45,6 +45,7 @@ Reaction* reactionFactory(const string& name, double dt, const int numPoints,
    {
       return iter->second(obj, dt, numPoints, group);
    }
+   /**
    string filename = method;
    if (filename[0]!='/')
    {
@@ -77,6 +78,7 @@ Reaction* reactionFactory(const string& name, double dt, const int numPoints,
       assert(false); // reachable only due to bad input
       return 0;
    }
+   */
 }
 
 void registerReactionFactory(const string method, reactionFactoryFunction scanFunc)

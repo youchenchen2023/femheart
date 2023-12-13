@@ -17,8 +17,8 @@ class ReactionManager
              ro_mgarray_ptr<double> Vm,
              ro_mgarray_ptr<double> iStim,
              wo_mgarray_ptr<double> dVm);
-   void updateNonGate(double dt, ro_mgarray_ptr<double> Vm, wo_mgarray_ptr<double> dVR);
-   void updateGate   (double dt, ro_mgarray_ptr<double> Vm);
+   //void updateNonGate(double dt, ro_mgarray_ptr<double> Vm, wo_mgarray_ptr<double> dVR);
+   //void updateGate   (double dt, ro_mgarray_ptr<double> Vm);
    std::string stateDescription() const;
 
    /** Populates the Vm array with some sensible default initial

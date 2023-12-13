@@ -17,7 +17,7 @@ class ReactionWrapper
  public:
    ReactionWrapper(const double new_dt, const std::vector<std::string> new_objectNames, const ThreadTeam& group, const std::vector<int>& cellTypes);
    void Initialize();
-   void Calc();
+   void Calc(const double _dt);
    Vector& getVmReadwrite();
    Vector& getIionReadwrite();
    const Vector& getVmReadonly() const;

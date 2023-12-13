@@ -17,8 +17,8 @@ class Reaction
                      ro_mgarray_ptr<double> Vm,
                      ro_mgarray_ptr<double> iStim,
                      wo_mgarray_ptr<double> dVm) = 0;
-   virtual void updateNonGate(double dt, ro_mgarray_ptr<int> indexArray, ro_mgarray_ptr<double> Vm, wo_mgarray_ptr<double> dVR) {};
-   virtual void updateGate   (double dt, ro_mgarray_ptr<int> indexArray, ro_mgarray_ptr<double> Vm) {};
+   //virtual void updateNonGate(double dt, ro_mgarray_ptr<int> indexArray, ro_mgarray_ptr<double> Vm, wo_mgarray_ptr<double> dVR) {};
+   //virtual void updateGate   (double dt, ro_mgarray_ptr<int> indexArray, ro_mgarray_ptr<double> Vm) {};
 
    /** Populates the Vm array with some sensible default initial
     * membrane voltage.  Vm will be the parallel to the local cells in

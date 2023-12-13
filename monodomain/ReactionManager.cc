@@ -28,6 +28,7 @@ void ReactionManager::calc(double dt,
    }
 }
 
+/**
 void ReactionManager::updateNonGate(double dt,
                                     ro_mgarray_ptr<double> Vm,
                                     wo_mgarray_ptr<double> dVm)
@@ -51,6 +52,7 @@ void ReactionManager::updateGate(double dt,
                                  Vm);
    }
 }
+*/
 
 /** Populates the Vm array with some sensible default initial
  * membrane voltage.  Vm will be the parallel to the local cells in

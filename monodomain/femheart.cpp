@@ -76,6 +76,11 @@ int main(int argc, char *argv[])
 
    units_internal(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
    units_external(1e-3, 1e-9, 1e-3, 1e-3, 1, 1e-9, 1);
+   
+   OptionsParser args(argc, argv);
+   args.AddOption(&mesh_file, "-m", "--mesh", "Mesh file to use.");
+   args.AddOption(&order, "-o", "--order", "Finite element polynomial degree");
+   args.ParseCheck();
 
    if (my_rank == 0)
    {
@@ -370,10 +375,9 @@ int main(int argc, char *argv[])
    reactionNames.push_back(reactionName);
 
    std::vector<int> cellTypes(anatomy->Size());
-   ParGridFunction& anatomy_ = *anatomy;
    for (int i = 0; i <  anatomy->Size(); ++i) {
-    cellTypes[i] = static_cast<int>(anatomy_(i));
-    }
+    cellTypes[i] = static_cast<int>((*anatomy)(i));
+   }
 
    ReactionWrapper reactionWrapper(dt,reactionNames,defaultGroup,cellTypes); 
 
@@ -444,7 +448,7 @@ int main(int argc, char *argv[])
       }
 
       reactionWrapper.getVmReadwrite() = actual_Vm; //should be a memcpy
-      reactionWrapper.Calc();
+      reactionWrapper.Calc(dt);
       
       //add stimulii
       stims.updateTime(timeline.realTimeFromTimestep(itime));

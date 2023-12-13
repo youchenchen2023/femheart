@@ -46,9 +46,9 @@ void ReactionWrapper::Initialize()
    reaction.initializeMembraneState(Vm);
 }
 
-void ReactionWrapper::Calc()
+void ReactionWrapper::Calc(const double _dt)
 {
-   reaction.calc(dt, Vm, iStim, dVm);
+   reaction.calc(_dt, Vm, iStim, dVm);
 }
 
 Vector& ReactionWrapper::getVmReadwrite()
