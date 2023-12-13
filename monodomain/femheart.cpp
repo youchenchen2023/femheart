@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
    string dataname = "femheart.data";
 
    OptionsParser args(argc, argv);
-   args.AddOption(&dataname, "-d", "--data", "Data file to use.");
+   args.AddOption(&dataname, "-m", "--mesh", "Data file to use.");
    args.ParseCheck();
    
 
