@@ -83,15 +83,13 @@ int main(int argc, char *argv[])
    args.AddOption(&dataname, "-m", "--mesh", "Data file to use.");
    args.ParseCheck();
    
-   if (my_rank == 0)
-   {  
-      cout<<"argc:"<<argc<<endl;
-      for(int i = 0; i< argc; ++i)
+   cout<<"argc:"<<argc<<endl;
+   for(int i = 0; i< argc; ++i)
       {
          std::cout<<"!"<<argv[i]<<std::endl;
       }
       
-   }
+   
    if (my_rank == 0)
    {  
       //std::cout<< dataname << std::endl;
